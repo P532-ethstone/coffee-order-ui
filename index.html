@@ -192,7 +192,7 @@
             orderDetails.textContent = selectedBeverage + condimentsString + "!";
 
             let orderCost = document.createElement("h2");
-            orderCost.textContent = "Total: $" + String(cost);
+            orderCost.textContent = "Total: $" + String(Math.round(cost * 100) / 100);
 
 
             orderScreen.appendChild(orderPlaced);
