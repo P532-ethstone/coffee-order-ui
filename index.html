@@ -53,7 +53,8 @@
     <script>
         let selectedBeverage = "";
         let condiments = [];
-        let orderId = 1;
+        // let host = "https://coffeeorder-ethstone.onrender.com";
+        let host = "http://localhost:8080";
 
         function showBeverageSelection() {
             document.getElementById("home-screen").classList.add("hidden");
@@ -117,88 +118,48 @@
             });
         }
 
-        function confirmOrder(){
+        async function confirmOrder(){
             document.getElementById("condiment-screen").classList.add("hidden");
             const orderScreen = document.getElementById("order-screen");
             orderScreen.classList.remove("hidden");
 
+            let order = {beverage: selectedBeverage, condiments: condiments}
             orderScreen.innerHTML = "";
             let orderPlaced = document.createElement("h2");
             orderPlaced.textContent = "Order Placed:";
 
-            //get id - random number between 1 and 1000 for now
-            let id = Math.floor(Math.random() * 1000) + 1;
-            let orderId = document.createElement("h2");
-            orderId.textContent = "Order Id: " + String(id);
+            //post to backend
+            let request = {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(order)
+			};
+			
+			let response = await fetch(host + "/orders", request);
+			if(response.ok){
+                const receipt = await response.json();
 
-            let condimentsString = "";
-            let cost = 0;
-            switch (selectedBeverage){
-                case "Dark Roast":
-                    cost += 1.99;
-                    break;
-                case "House Blend":
-                    cost += 1.65;
-                    break;
-                case "Espresso":
-                    cost += 1.34;
-                    break;
-                case "Decaf":
-                    cost += 1.28;
-                    break;
+                let orderId = document.createElement("h2");
+                orderId.textContent = "Order Id: " + receipt.id;
+
+                let orderDetails = document.createElement("h2");
+                orderDetails.textContent = receipt.description;
+
+                let orderCost = document.createElement("h2");
+                orderCost.textContent = "Total: $" + String(Math.round(receipt.cost * 100) / 100);
+                
+                orderScreen.appendChild(orderPlaced);
+                orderScreen.appendChild(orderId);
+                orderScreen.appendChild(orderDetails);
+                orderScreen.appendChild(orderCost);
             }
-            condiments.forEach(condiment => {
-                switch(condiment){
-                    case "Milk":
-                        cost += 0.4;
-                        if(condimentsString == ""){
-                            condimentsString += "milk";
-                        }
-                        else{
-                            condimentsString += " and milk";
-                        }
-                        break;
-                    case "Mocha":
-                        cost += 0.3;
-                        if(condimentsString == ""){
-                            condimentsString += " with mocha";
-                        }
-                        else{
-                            condimentsString += " and mocha";
-                        }
-                        break;
-                    case "Soy":
-                        cost += 0.27;
-                        if(condimentsString == ""){
-                            condimentsString += " with soy";
-                        }
-                        else{
-                            condimentsString += " and soy";
-                        }
-                        break;
-                    case "Whip":
-                        cost += 0.25;
-                        if(condimentsString == ""){
-                            condimentsString += " with whip";
-                        }
-                        else{
-                            condimentsString += " and whip";
-                        }
-                        break;
-                }
-            });
-
-            let orderDetails = document.createElement("h2");
-            orderDetails.textContent = selectedBeverage + condimentsString + "!";
-
-            let orderCost = document.createElement("h2");
-            orderCost.textContent = "Total: $" + String(Math.round(cost * 100) / 100);
-
-
-            orderScreen.appendChild(orderPlaced);
-            orderScreen.appendChild(orderId);
-            orderScreen.appendChild(orderDetails);
-            orderScreen.appendChild(orderCost);
+            else{
+                let orderFailed = document.createElement("h2");
+                orderFailed.textContent = "Order Failed"
+                orderScreen.appendChild(orderFailed);
+            }
         }
     </script>
 </body>
